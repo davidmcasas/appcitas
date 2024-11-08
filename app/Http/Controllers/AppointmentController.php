@@ -44,17 +44,18 @@ class AppointmentController extends Controller
 
     private function getNextDateTime(): \Illuminate\Support\Carbon
     {
-        $dateTime = now()->startOfDay();
+        $closestDate = now()->startOfDay()->addDay()->setHour(10);
+        $lastDate = Appointment::query()->orderBy('date', 'desc')->first()?->date;
 
-        do {
-            $dateTime = $dateTime->addDay();
-            $appointments = Appointment::query()->whereDate('date', $dateTime->toDateString())->count();
-        } while ($appointments >= 12);
+        if (!$lastDate || $lastDate < $closestDate) {
+            return $closestDate;
+        }
 
-        $hour = 10 + $appointments;
-        $dateTime->setHour($hour);
-
-        return $dateTime;
+        if ($lastDate->hour >= 21) {
+            return $lastDate->addDay()->setHour(10);
+        } else {
+            return $lastDate->addHour();
+        }
     }
 
 
