@@ -26,10 +26,15 @@ class AppointmentController extends Controller
         ]);
 
         // Prevenir citas con hora duplicada por peticiones simultáneas
-        while ($this->isDateTimeDuplicated($appointment)) {
-            $appointment->date = $this->getNextDateTime();
-            $appointment->save();
-        }
+        DB::transaction(function () use ($appointment) {
+            // Bloquear las filas que tengan esta misma fecha y hora o superior
+            Appointment::query()->lockForUpdate()->where('date', '>=', $appointment->date)->get();
+
+            while ($this->isDateTimeDuplicated($appointment)) {
+                $appointment->date = $this->getNextDateTime();
+                $appointment->save();
+            }
+        });
 
         $appointment->notify(new AppointmentCreated($appointment));
 

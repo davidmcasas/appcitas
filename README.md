@@ -48,6 +48,13 @@ También he implementado una comprobación para evitar citas con hora duplicada 
 Al tratarse de inserción de registros nuevos, compruebo tras la inserción que no haya otro registro con la misma fecha.
 Si se tratase de lectura o actualización de registros existentes, utilizaría un bloqueo de filas con lockForUpdate()
 
+#### Actualización:
+Tras realizar un stress test de concurrencia con JMeter (lanzando cientos de peticiones de citas simultáneas en múltiples hilos),
+he subido una corrección de última hora (ver historial GIT).
+De la forma que estaba originalmente, nunca iba a haber fechas duplicadas, pero podían quedarse huecos libres si dos citas
+intentaban corregir su fecha a la vez. Con la corrección, no se quedarán huecos de horas libres.
+Puede ocurrir que el orden de IDs en BBDD de las citas no se corresponda con su orden de fechas, pero esto es trivial.
+
 Nota: el enunciado dice que se puede asignar citas desde las 10 hasta las 22, y que las citas duran 1 hora,
 aquí me surge la duda de si la hora 22 también es asignable (la cita acabaría a las 23), he supuesto que no,
 por tanto caben 12 citas en un día y la última hora asignable es las 21.
