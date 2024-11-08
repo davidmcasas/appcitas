@@ -62,7 +62,7 @@ class AppointmentController extends Controller
     private function isDateTimeDuplicated($appointment): bool
     {
         return Appointment::query()
-            ->where('date', $appointment->date->toDateString())
+            ->where('date', $appointment->date)
             ->whereNot('id', $appointment->id)
             ->exists();
     }
