@@ -15,9 +15,12 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        $password = $this->command->ask("Introduce la contraseña para el usuario 'test@example.com' (déjalo en blanco para usar '1234')", 1234);
+
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'password' => bcrypt($password),
         ]);
     }
 }

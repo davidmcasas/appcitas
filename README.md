@@ -1,66 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Prueba Técnica para PandoraFMS
+## Por David Martínez Casas
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Se trata de una aplicación web realizada en Laravel 11 (PHP 8.3)
 
-## About Laravel
+La aplicación se encuentra desplegada en: https://pruebapandora.davidmcasas.com
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Nota: En el historial de GIT se puede ver el commit del ejercicio, para saber rápidamente que archivos pertenecen
+de base a Laravel, y que archivos o cambios pertenecen al desarrollo del ejercicio.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Partes del ejercicio:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Implementar modelo de datos en SQL.
+En un principio iba hacerlo usando dos tablas, Paciente y Cita, pero surgían casos que el enunciado no contempla.
+Por ejemplo: ¿Qué pasaría con los datos de un paciente si pide otra cita pero introduce un email y teléfono diferentes a la cita anterior?
+Para no enredarme con eso y que sea lo más fiel a lo que pide el ejercicio, lo hago con una única tabla de Citas.
 
-## Learning Laravel
+Ver archivo: [database/migrations/2024_11_08_084845_create_app_tables.php](database%2Fmigrations%2F2024_11_08_084845_create_app_tables.php)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2. Implementar formulario de recepción de datos
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Vista del formulario: 
+[views/appointments/new.blade.php](resources%2Fviews%2Fappointments%2Fnew.blade.php)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Vista de confirmación: 
+[views/appointments/created.blade.php](resources%2Fviews%2Fappointments%2Fcreated.blade.php)
 
-## Laravel Sponsors
+Validación de los campos del formulario del lado del servidor:
+[AppointmentRequest.php](app%2FHttp%2FRequests%2FAppointmentRequest.php)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Controlador de citas:
+[AppointmentController.php](app%2FHttp%2FControllers%2FAppointmentController.php)
 
-### Premium Partners
+El script del Ajax del DNI lo he embebido en la vista por agilizar la tarea,
+aunque sería más correcto extraerlo a un .js aparte y compilarlo con Vite.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Para la validación frontend del email solo he puesto type="email" en el input,
+en backend también se valida que sea un email válido mediante la regla de validación 'email', por lo que es imposible
+ingresar un email inválido.
 
-## Contributing
+### 3. Implementar sistema de asignación de citas/horas
+En AppointmentController.php está la función que asigna horas de forma automática.
+Esta función está simplificada y cumple el enunciado del ejercicio, pero no es realista,
+ya que no contempla casos como que se elimine una cita y se quede su hueco disponible (el ejercicio no pide contemplar la eliminación de citas).
+Se asignan citas siempre a partir del día siguiente al actual.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+También he implementado una comprobación para evitar citas con hora duplicada por peticiones concurrentes.
+Al tratarse de inserción de registros nuevos, compruebo tras la inserción que no haya otro registro con la misma fecha.
+Si se tratase de lectura o actualización de registros existentes, utilizaría un bloqueo de filas con lockForUpdate()
 
-## Code of Conduct
+Nota: el enunciado dice que se puede asignar citas desde las 10 hasta las 22, y que las citas duran 1 hora,
+aquí me surge la duda de si la hora 22 también es asignable (la cita acabaría a las 23), he supuesto que no,
+por tanto caben 12 citas en un día y la última hora asignable es las 21.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. [OPCIONAL] Implementar envío por email al paciente con la cita.
+Implementado mediante Notifications de Laravel. Las notificaciones serán encoladas en la tabla jobs,
+por tanto solo se enviarán si hay un worker de Laravel ejecutando la cola "notifications".
+Por seguridad, en mi servidor no se está ejecutando un worker, de forma que los emails se quedarán encolados sin llegarse a enviar nunca.
 
-## Security Vulnerabilities
+[Notifications/AppointmentCreated.php](app%2FNotifications%2FAppointmentCreated.php)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Nota: el HTML generado por la plantilla de notificación de Laravel contiene algunos textos en inglés,
+se puede traducir y modificar al gusto publicando y modificando dicha plantilla, pero no me he parado a ello.
 
-## License
+### [Adiccional] Vista de administración con listado de citas
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Me he tomado la libertad de añadir una vista de administración con una tabla de citas muy rudimentaria.
+
+Se puede acceder pulsando el botón "Acceso" e iniciando sesión con el usuario de BD de la tabla users, por defecto:
+test@example.com | 1234
+
+No me he parado a traducir ni modificar la vista de login de Laravel porque se sale del ejercicio.
+
+
+## Pasos para desplegar en otro sistema: 
+
+### 1. Clonar el repositorio al servidor donde se vaya a probar e instalar dependencias.
+```
+composer install
+```
+En caso de conflicto por tener varias versiones de composer, utilizar:
+```
+composer2 install
+```
+
+### 2. Copiar ".env.example" y renombrarlo a ".env", y configurarlo.
+
+En el archivo .env es necesario configurar las variables de entorno de la base de datos que se vaya a utilizar.
+Para pruebas rápidas se puede utilizar SQLite (si el servidor lo permite) "DB_CONNECTION=sqlite".
+Para MySQL: "DB_CONNECTION=mysql" y configurar el resto de variables DB_*
+
+### 3. Generar clave hash de la aplicación.
+```
+php artisan key:generate
+```
+Laravel escribirá esta clave en el fichero .env en "APP_KEY"
+
+### 4. Crear las tablas de la BBDD y ejecutar el Seeder.
+```
+php artisan migrate:fresh --seed
+```
+El seeder pedirá introducir la contraseña deseada para los usuarios de ejemplo.
+De no introducirla, se usará por defecto "1234".
+
+### 5. Compilar los CSS y JS de Vite
+
+```
+npm run build
+```
+Esto creara la carpeta public/build con los .js y .css compilados de la aplicación
+
+Probado con Node 23
+
+### 6. (Opcional) Ejecutar cacheado de Laravel
+```
+php artisan optimize
+``` 
+
+### 7. (Opcional) Configurar envío de email
+
+En el .env, las variables MAIL_* están configuradas por defecto
+para que los emails se registren en el Log de laravel en lugar de enviarse
+("MAIL_MAILER=log"). Para que se envíen por smtp, hay que poner
+"MAIL_MAILER=smtp" y el configurar el resto de variables MAIL_*.
+
+Recordatorio: los emails solo se ejecutarán si hay un worker de Laravel ejecutándose para la cola de notificaciones,
+de lo contrario permanecerán encolados en la tabla jobs
+```
+php artisan queue:work --queue=notifications
+```
+
