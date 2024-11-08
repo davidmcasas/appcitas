@@ -11,6 +11,10 @@
                     },
                 }).done(function(response) {
                     $('#input_revision').prop("disabled", !response.exists);
+                    if (!response.exists) {
+                        $("#input_first").prop("checked", true);
+                        $("#input_revision").prop("checked", false);
+                    }
                 });
             });
         });
@@ -65,7 +69,7 @@
                         <div class="grid gap-6 mb-6 md:grid-cols-2">
                         <label>
                             <span class="text-gray-600">Primera Cita</span>
-                            <input type="radio" value="first" name="appointment_type" checked>
+                            <input id="input_first" type="radio" value="first" name="appointment_type" checked>
                         </label>
                         <label>
                             <span class="text-gray-600">Revisión</span>
