@@ -5,8 +5,8 @@ Se trata de una aplicación web realizada en Laravel 11 (PHP 8.3)
 
 La aplicación se encuentra desplegada en: https://pruebapandora.davidmcasas.com
 
-Nota: En el historial de GIT se puede ver el commit del ejercicio, para saber rápidamente que archivos pertenecen
-de base a Laravel, y que archivos o cambios pertenecen al desarrollo del ejercicio.
+Nota: En el historial de GIT se puede ver el commit del ejercicio, para saber rápidamente qué archivos pertenecen
+de base a Laravel, y qué archivos o cambios pertenecen al desarrollo del ejercicio.
 
 ## Partes del ejercicio:
 
@@ -62,7 +62,6 @@ por tanto caben 12 citas en un día y la última hora asignable es las 21.
 ### 4. [OPCIONAL] Implementar envío por email al paciente con la cita.
 Implementado mediante Notifications de Laravel. Las notificaciones serán encoladas en la tabla jobs,
 por tanto solo se enviarán si hay un worker de Laravel ejecutando la cola "notifications".
-Por seguridad, en mi servidor no se está ejecutando un worker, de forma que los emails se quedarán encolados sin llegarse a enviar nunca.
 
 [Notifications/AppointmentCreated.php](app%2FNotifications%2FAppointmentCreated.php)
 
@@ -118,17 +117,12 @@ Esto creara la carpeta public/build con los .js y .css compilados de la aplicaci
 
 Probado con Node 23
 
-### 6. (Opcional) Ejecutar cacheado de Laravel
-```
-php artisan optimize
-``` 
-
-### 7. (Opcional) Configurar envío de email
+### 6. (Opcional) Configurar envío de email
 
 En el .env, las variables MAIL_* están configuradas por defecto
 para que los emails se registren en el Log de laravel en lugar de enviarse
 ("MAIL_MAILER=log"). Para que se envíen por smtp, hay que poner
-"MAIL_MAILER=smtp" y el configurar el resto de variables MAIL_*.
+"MAIL_MAILER=smtp" y configurar el resto de variables MAIL_*.
 
 Recordatorio: los emails solo se ejecutarán si hay un worker de Laravel ejecutándose para la cola de notificaciones,
 de lo contrario permanecerán encolados en la tabla jobs
@@ -136,3 +130,9 @@ de lo contrario permanecerán encolados en la tabla jobs
 php artisan queue:work --queue=notifications
 ```
 
+### 7. (Opcional) Ejecutar cacheado de Laravel
+```
+php artisan optimize
+``` 
+Esto también cachea las variables del .env, por lo que a partir de ahora, ante cualquier cambio en el .env
+será necesario volver a ejecutar el cacheado.
